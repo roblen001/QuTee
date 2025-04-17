@@ -18,15 +18,25 @@ class BigramLanguageModel(nn.Module):
     without using attention or larger context.
     """
 
-    def __init__(self, tokenizer: dict[str, list[str]]):
+    def __init__(self, tokenizer: dict[str, list[str]], context_size: int = 1024):
         super().__init__() # calls constructor of parent (nn.Module) else you get an error, enables the pytorch stuff we need ( .parameters(), .cuda(), .train(), .eval()) and so on
         # A simple lookup table based on the vocab size x embedding dimension (you can choose this dimension)
         # for each encoding you now have a vector (randomly initalized) that will be improve each iteration of the model
         # the goal is to get the vector represensatations of the tokens (dense vectors) to be close together in the vector space
         # if they are related.
+        embedding_dim = 64
         token_dict_dim = len(tokenizer['encoder'])
+        # TODO: currently not actually using gpu
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.token_embedding_table = nn.Embedding(token_dict_dim, token_dict_dim).to(self.device) # I believe most models use a 128 dim embedding but that could be outdated by now
+        self.token_embedding_table = nn.Embedding(token_dict_dim, embedding_dim) # I believe most models use a 128 dim embedding but that could be outdated by now
+        self.context_size = context_size
+        # without position embedding table the model has no way of knowing which token came first
+        # this knowledge will help it make better predictions
+        self.position_embedding_table = nn.Embedding(context_size, embedding_dim)
+
+        # linear layer turns a contextual vector into a token probability distribution since the position
+        # embdding adds dimensionality to the data
+        self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
 
     def _reshape_tensors(logits, targets):
         """
@@ -68,8 +78,17 @@ class BigramLanguageModel(nn.Module):
             logits (Tensor): Raw unnormalized scores for next-token prediction, shape (batch_size, context_size, vocab_size)
             loss (Tensor or None): Cross-entropy loss if targets are provided; otherwise None
         """
+        batch_size, input_length = input_ids.shape
+        
         # the shape of our input_ids will change once it is converted to the embeddings
-        logits = self.token_embedding_table(input_ids)  # (batch_size, context_size, vocab_size)
+        embeddings = self.token_embedding_table(input_ids)  # (batch_size, context_size, vocab_size)
+        # truncate if the input_length is longer then the context size of the model
+        positions = torch.arange(input_length, device=self.device).clamp(0, self.context_size - 1).unsqueeze(0)
+        position_embeddings = self.position_embedding_table(positions)
+        input_embeddings = embeddings + position_embeddings 
+        # linear layer turns a contextual vector into a token probability distribution since the position
+        logits = self.lm_head(input_embeddings)
+
         # no targets when inferencing, but not training
         if targets is None:
             loss = None
@@ -96,7 +115,7 @@ class BigramLanguageModel(nn.Module):
         """
         i = 0
         output_ids = input_ids
-        while i <= max_new_tokens:
+        while i < max_new_tokens:
             # Predict logits for the current sequence
             logits = self(output_ids)  # (B, T, vocab_size)
 
@@ -147,16 +166,16 @@ class BigramLanguageModel(nn.Module):
         return average_losses
 
 
-    def training_loop(self, data, optimizer, epochs: int = 10000, batch_size: int = 32, context_size: int = 8):
+    def training_loop(self, data, optimizer, epochs: int = 10000, batch_size: int = 32):
         train_dataset = {'train': data['train']['stream']}
         for step in range(epochs):
             if step % 500 == 0:
-                losses = self.pooled_loss(data, 500, batch_size, context_size)
+                losses = self.pooled_loss(data, 500, batch_size, self.context_size)
                 print(f"=========TRAINING LOSS AT STEP {step}===================")
                 print(f"validation: {losses['test']}")
                 print(f"training: {losses['train']}")
             
-            batch = get_batch(train_dataset, batch_size, context_size)
+            batch = get_batch(train_dataset, batch_size, self.context_size)
             x = batch['train']['x'].to(self.device)
             y = batch['train']['y'].to(self.device)
 
