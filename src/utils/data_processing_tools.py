@@ -64,8 +64,10 @@ def decode(tokens: List[int], tokenizer: Dict[str, Dict]) -> str:
     Returns:
         The reconstructed string.
     """
+    if isinstance(tokens, torch.Tensor):
+        flat_list = tokens.view(-1).tolist()
     dec = tokenizer['decoder']
-    return ''.join(dec[t] for t in tokens)
+    return ''.join(dec[t] for t in flat_list)
 
 
 def train_test_split(
@@ -88,7 +90,6 @@ def train_test_split(
         'train': data[:split],
         'test':  data[split:]
     }
-
 
 def get_batch(
     dataset: Dict[str, torch.Tensor],

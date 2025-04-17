@@ -41,7 +41,7 @@ def prepare_data(
         split_ratio: Fraction of data used for training.
 
     Returns:
-        - batched_data: Dict['train'/'test'] -> {'x':Tensor, 'y':Tensor}
+        - batched_data: Dict['train'/'test'] → {'x': Tensor, 'y': Tensor, 'stream': Tensor}
         - tokenizer:    The mapping dict with 'encoder'/'decoder'
 
     Example:
@@ -50,20 +50,19 @@ def prepare_data(
             batch_size=32,
             context_size=16
         )
-        print(batched_data['train']['x'].shape)  # -> (32, 16)
+        print(batched_data['train']['x'].shape)  # → (32, 16)
     """
-    # 1. Read and tokenize
     raw = read_textfile(path)
     tokenizer = create_tokenizer(raw)
 
-    # 2. Encode entire corpus into integer IDs
+    # Encode entire corpus into integer IDs
     ids = encode(raw, tokenizer)
     tensor_ids = torch.tensor(ids, dtype=torch.int64)
 
-    # 3. Split into train/test streams
+    # Split into train/test streams
     splits = train_test_split(tensor_ids, threshold=split_ratio)
 
-    # 4. Build one batch per split
-    batched_data = get_batch(splits, batch_size, context_size)
-
-    return batched_data, tokenizer
+    return {
+        'train': {'stream': splits['train']},
+        'test': {'stream': splits['test']}
+    }, tokenizer
