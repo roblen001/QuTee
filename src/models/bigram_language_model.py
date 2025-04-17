@@ -1,3 +1,5 @@
+"""Contains the main model architecture
+"""
 
 import torch
 import torch.nn as nn
@@ -5,6 +7,7 @@ from torch.nn import functional
 from torch import Tensor
 
 from src.utils.data_processing_tools import get_batch 
+from src.models.attention import Head
 
 # simple bigrammodel
 # just predicts the next token based on the current token
@@ -37,6 +40,7 @@ class BigramLanguageModel(nn.Module):
         # linear layer turns a contextual vector into a token probability distribution since the position
         # embdding adds dimensionality to the data
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
+        self.attention_head = Head(head_size = embedding_dim, context_size=context_size)
 
     def _reshape_tensors(logits, targets):
         """
@@ -83,11 +87,14 @@ class BigramLanguageModel(nn.Module):
         # the shape of our input_ids will change once it is converted to the embeddings
         embeddings = self.token_embedding_table(input_ids)  # (batch_size, context_size, vocab_size)
         # truncate if the input_length is longer then the context size of the model
-        positions = torch.arange(input_length, device=self.device).clamp(0, self.context_size - 1).unsqueeze(0)
+        positions = torch.arange(input_length)
         position_embeddings = self.position_embedding_table(positions)
-        input_embeddings = embeddings + position_embeddings 
+        processed_embeddings = embeddings + position_embeddings 
+        # we want to pass the embeddings through the self attention layer, so the model can learn 
+        # based on context
+        processed_embeddings = self.attention_head(processed_embeddings)
         # linear layer turns a contextual vector into a token probability distribution since the position
-        logits = self.lm_head(input_embeddings)
+        logits = self.lm_head(processed_embeddings)
 
         # no targets when inferencing, but not training
         if targets is None:
@@ -116,8 +123,11 @@ class BigramLanguageModel(nn.Module):
         i = 0
         output_ids = input_ids
         while i < max_new_tokens:
+            # because positional embeddings relies on context_size we cannot
+            # have input_ids with length larger than context_size
+            output_ids_trimmed = output_ids[:, -self.context_size:]
             # Predict logits for the current sequence
-            logits = self(output_ids)  # (B, T, vocab_size)
+            logits = self(output_ids_trimmed)  # (B, T, vocab_size)
 
             # Use only the last timestep to predict the next token
             logits = logits[:, -1, :]  # (B, vocab_size)
