@@ -23,7 +23,8 @@ Concepts used:
 """
 import torch
 
-from utils.data_processing_tools import read_textfile, create_tokenizer, encode, train_test_split, get_batch
+from ..utils.data_processing_tools  import read_textfile, create_tokenizer, encode, train_test_split, get_batch
+
 def prepare_data(
     path: str,
     batch_size: int,
