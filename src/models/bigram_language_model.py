@@ -7,7 +7,7 @@ from torch.nn import functional
 from torch import Tensor
 
 from src.utils.data_processing_tools import get_batch 
-from src.models.attention import Head
+from src.models.attention import MultiHeadAttention
 
 # simple bigrammodel
 # just predicts the next token based on the current token
@@ -40,7 +40,7 @@ class BigramLanguageModel(nn.Module):
         # linear layer turns a contextual vector into a token probability distribution since the position
         # embdding adds dimensionality to the data
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
-        self.attention_head = Head(head_size = embedding_dim, context_size=context_size)
+        self.attention_head = MultiHeadAttention(embedding_dim=embedding_dim, num_heads=4)
 
     def _reshape_tensors(logits, targets):
         """
