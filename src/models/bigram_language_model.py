@@ -8,6 +8,7 @@ from torch import Tensor
 
 from src.utils.data_processing_tools import get_batch 
 from src.models.attention import MultiHeadAttention
+from src.models.mlp import FeedForward
 
 # simple bigrammodel
 # just predicts the next token based on the current token
@@ -40,7 +41,17 @@ class BigramLanguageModel(nn.Module):
         # linear layer turns a contextual vector into a token probability distribution since the position
         # embdding adds dimensionality to the data
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
+        
+        # attention layer is going to allow the model to have an understanding of tokens based on its surrounding context.
+        # for example a human might not know the definition of 'mole' since it could be the animal mole, chemistry measurement unit mole, or mole in the medical sense
+        # but if we see the word in a sentence like "The doctor examined my mole." We know defition of mole is being used. 
+        # The attention mechanism gives the model the ability to understand language like that too. 
         self.attention_head = MultiHeadAttention(embedding_dim=embedding_dim, num_heads=4)
+
+        # the MLP portion is added to the architecture so the model can memorize facts about the text
+        # thing like Lebron James is a basketball player...
+        self.mlp = FeedForward(embedding_dim)
+
 
     def _reshape_tensors(logits, targets):
         """
@@ -93,6 +104,7 @@ class BigramLanguageModel(nn.Module):
         # we want to pass the embeddings through the self attention layer, so the model can learn 
         # based on context
         processed_embeddings = self.attention_head(processed_embeddings)
+        processed_embeddings = self.mlp(processed_embeddings)
         # linear layer turns a contextual vector into a token probability distribution since the position
         logits = self.lm_head(processed_embeddings)
 
