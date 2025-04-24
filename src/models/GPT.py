@@ -7,8 +7,8 @@ from torch.nn import functional
 from torch import Tensor
 
 from src.utils.data_processing_tools import get_batch 
-from src.models.attention import MultiHeadAttention
-from src.models.mlp import FeedForward
+from src.model_components.attention import MultiHeadAttention
+from src.model_components.feedforward import BaseFeedForward, ClassicalFeedForward, QuantumFeedForward
 
 import torch
 import torch.nn as nn
@@ -37,6 +37,10 @@ class TransformerBlock(nn.Module):
     num_heads : int
         Number of parallel attention heads. ``embedding_dim`` must be divisible by
         this value.
+    feedforward_cls : type[BaseFeedForward]
+        Class implementing the feed-forward interface to use (classical or quantum).
+    ff_kwargs : dict
+        Additional kwargs passed to the feedforward constructor.
 
     Notes
     -----
@@ -46,7 +50,11 @@ class TransformerBlock(nn.Module):
         *un-masked*.
     """
 
-    def __init__(self, embedding_dim: int, num_heads: int) -> None:
+    def __init__(self,
+                 embedding_dim: int,
+                 num_heads: int,
+                 feedforward_cls: type[BaseFeedForward] = ClassicalFeedForward,
+                 **ff_kwargs) -> None:
         super().__init__()
 
         # attention layer is going to allow the model to have an understanding of tokens based on its surrounding context.
@@ -57,7 +65,7 @@ class TransformerBlock(nn.Module):
 
         # the MLP portion is added to the architecture so the model can memorize facts about the text
         # thing like Lebron James is a basketball player...
-        self.feed_forward  = FeedForward(embedding_dim)
+        self.feed_forward  = feedforward_cls(embedding_dim, **ff_kwargs)
 
         # “Pre-Norm” formulation this is a deviation from the original 'Attention Is All You Need Paper'
         self.norm_attn = nn.LayerNorm(embedding_dim)
@@ -93,13 +101,19 @@ class GPT(nn.Module):
     without using attention or larger context.
     """
 
-    def __init__(self, tokenizer: dict[str, list[str]], context_size: int = 128, n_layer: int = 4, num_heads: int = 4):
+    def __init__(self,
+                 tokenizer: dict[str, list[str]],
+                 context_size: int = 128,
+                 n_layer: int = 4,
+                 num_heads: int = 4,
+                 embedding_dim: int = 328,
+                 feedforward_cls: type[BaseFeedForward] = ClassicalFeedForward,
+                 ff_kwargs: dict = {}):
         super().__init__() # calls constructor of parent (nn.Module) else you get an error, enables the pytorch stuff we need ( .parameters(), .cuda(), .train(), .eval()) and so on
         # A simple lookup table based on the vocab size x embedding dimension (you can choose this dimension)
         # for each encoding you now have a vector (randomly initalized) that will be improve each iteration of the model
         # the goal is to get the vector represensatations of the tokens (dense vectors) to be close together in the vector space
         # if they are related.
-        embedding_dim = 328
         token_dict_dim = len(tokenizer['encoder'])
         # TODO: currently not actually using gpu
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -114,7 +128,12 @@ class GPT(nn.Module):
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
         
         # this function just makes it easier to add TransformerBlock layers for scaling
-        self.blocks = nn.Sequential(*[TransformerBlock(embedding_dim, num_heads=num_heads) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[TransformerBlock(
+            embedding_dim,
+            num_heads=num_heads,
+            feedforward_cls=feedforward_cls,
+            **ff_kwargs
+        ) for _ in range(n_layer)])
         self.layer_norm = nn.LayerNorm(embedding_dim)
 
     def _reshape_tensors(logits, targets):

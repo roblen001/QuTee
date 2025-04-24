@@ -66,8 +66,6 @@ class Head(nn.Module):
         The class typically includes learnable linear projections for keys, queries, and values, 
         as well as a mechanism to compute scaled dot-product attention within the specified context size.
         """
-        # TODO: add a constant file to decided some of the main parameters like embedding dimension
-        # or generate a simple pipeline function
 
         # query token asks 'here's what I am looking for'
         # this might be a noun looking for how words might effect it

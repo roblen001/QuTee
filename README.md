@@ -6,34 +6,78 @@ QuTee is a modular and extensible research framework designed to seamlessly inte
 
 ---
 
+## 📖 Quick Start
+
+**Installation:**
+
+```bash
+git clone https://github.com/roblen001/QuTee.git
+cd QuTee
+pip install -r requirements.txt
+```
+
+**Example of Classical feed-forward:**
+
+```bash
+from src.models.gpt import GPT
+from src.model_components.feedfoward import ClassicalFeedForward
+
+# these are currently set in configs/constants
+CONTEXT_SIZE = 64
+BATCH_SIZE = 8
+LEARNING_RATE = 1e-3
+EPOCHS = 5000
+MAX_NEW_TOKENS = 500
+NUM_OF_BLOCKS = 4
+NUM_HEADS = 4
+EMBEDDING_DIM = 128 
+
+model = GPT(
+    tokenizer=tokenizer,
+    context_size=CONTEXT_SIZE,
+    num_heads=NUM_HEADS,
+    n_layer=NUM_OF_BLOCKS,
+    embedding_dim=EMBEDDING_DIM,
+    feedforward_cls=ClassicalFeedForward,
+    # I will decide what ff_kwargs should be added when I figure out what the quantum equivalents are for tunable parameters
+    ff_kwargs={}
+)
+```
+
+**Example of Quantum feed-forward:**
+
+I currently have not implemented this part yet but this is the way I would like for this part to be called. You will currently get a not implemented error.
+
+```bash
+from src.models.gpt import GPT
+from src.model_components.feedforward import QuantumFeedForward
+
+# these are currently set in configs/constants
+CONTEXT_SIZE = 64
+BATCH_SIZE = 8
+LEARNING_RATE = 1e-3
+EPOCHS = 5000
+MAX_NEW_TOKENS = 500
+NUM_OF_BLOCKS = 4
+NUM_HEADS = 4
+EMBEDDING_DIM = 128 
+
+model = GPT(
+    tokenizer=tokenizer,
+    context_size=CONTEXT_SIZE,
+    num_heads=NUM_HEADS,
+    n_layer=NUM_OF_BLOCKS,
+    embedding_dim=EMBEDDING_DIM,
+    feedforward_cls=QuantumFeedForward,
+    ff_kwargs={"n_qubits": 4, "n_layers": 6}
+)
+```
+
 ## 🎯 Objectives
 
 - **Hybrid Experimentation:** Easily swap classical Transformer blocks with quantum-enhanced equivalents.
 - **Performance Benchmarking:** Evaluate and compare performance metrics such as loss, perplexity, training speed, inference latency, and model complexity.
 - **Quantum Component Identification:** Pinpoint quantum methods that offer tangible advantages in current (NISQ-era) quantum simulations and devices.
-
----
-
-## 🧩 Key Features
-
-- **Modular Design:**
-
-  - Plug-and-play Transformer blocks with quantum-classical interoperability.
-  - Clear abstraction layers for easy integration of quantum modules.
-
-- **Simulation First:**
-
-  - Initially target simulations using PennyLane with PyTorch backend.
-  - Future compatibility with real quantum backends (IBM Quantum, Rigetti, IonQ).
-
-- **Rapid Experimentation:**
-
-  - Quick prototyping and deployment of hybrid components.
-  - Simplified benchmarking framework for comparing classical and quantum performance.
-
-- **Reproducibility:**
-  - Structured codebase designed for clear, repeatable experiments.
-  - Comprehensive logging, checkpointing, and metric tracking.
 
 ---
 
@@ -44,7 +88,8 @@ QuTee is a modular and extensible research framework designed to seamlessly inte
 - [x] Data loading & tokenization (Shakespeare corpus)
 - [x] Implement baseline GPT model (classical Transformer)
 - [x] Basic training loop & inference routines
-- [ ] Simple performance benchmarks (loss, perplexity, runtime)
+- [x] Modularize Feedforward portion
+- [ ] Simple performance benchmarks module (loss, perplexity, runtime)
 
 ✅ **Phase 2: Quantum Integrations (Simulation)**
 
@@ -64,30 +109,6 @@ QuTee is a modular and extensible research framework designed to seamlessly inte
 - [ ] Compatibility with real quantum hardware
 - [ ] Integration with Hugging Face Transformers
 - [ ] Extended benchmarks on larger NLP datasets
-
----
-
-## 📖 Quick Start
-
-**Prerequisites:**
-
-- Python >= 3.8
-- PyTorch
-- PennyLane
-
-**Installation:**
-
-```bash
-git clone https://github.com/your-username/QuTee.git
-cd QuTee
-pip install -r requirements.txt
-```
-
-**Run Classical Baseline:**
-
-```bash
-python -m classical_main
-```
 
 ---
 
