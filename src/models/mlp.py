@@ -15,8 +15,14 @@ class FeedForward(nn.Module):
         super().__init__()
         # the activation funciton let's the model fit non linear relationships in the data
         self.net = nn.Sequential(
-            nn.Linear(embedding_dim, embedding_dim),
-            nn.ReLU()
+            # the 'Attention Is All You Need' paper uses mutiple of 4 which will add
+            # greater computation to our system, and growing our layer
+            nn.Linear(embedding_dim, 4*embedding_dim),
+            nn.ReLU(),
+            # projection layer going back into the residual pathway
+            # to decrease optimization issues with deep models.
+            nn.Linear(4*embedding_dim, embedding_dim),
+
         )
     
     def forward(self, input_ids: Tensor):

@@ -42,8 +42,8 @@ QuTee is a modular and extensible research framework designed to seamlessly inte
 ✅ **Phase 1: Classical Foundations**
 
 - [x] Data loading & tokenization (Shakespeare corpus)
-- [ ] Implement baseline GPT model (classical Transformer)
-- [ ] Basic training loop & inference routines
+- [x] Implement baseline GPT model (classical Transformer)
+- [x] Basic training loop & inference routines
 - [ ] Simple performance benchmarks (loss, perplexity, runtime)
 
 ✅ **Phase 2: Quantum Integrations (Simulation)**

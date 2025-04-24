@@ -10,10 +10,81 @@ from src.utils.data_processing_tools import get_batch
 from src.models.attention import MultiHeadAttention
 from src.models.mlp import FeedForward
 
-# simple bigrammodel
-# just predicts the next token based on the current token
-# linear, no larger context
-class BigramLanguageModel(nn.Module):
+import torch
+import torch.nn as nn
+
+class TransformerBlock(nn.Module):
+    """
+    A *single* decoder-style Transformer block (as used in GPT-like models).
+
+    The block performs two consecutive steps on the input sequence:
+
+    1. **Multi-Head Self-Attention** – tokens “talk” to every other token so the
+       model can gather context.
+    2. **Feed-Forward Network** – each token is processed independently through
+       a small MLP to create richer representations.
+
+    Each step is wrapped in:
+      • **LayerNorm** (applied *before* the step, “Pre-Norm”) to stabilise
+        training.  
+      • **Residual / skip connection** so gradients flow easily through many
+        stacked blocks.
+
+    Parameters
+    ----------
+    embedding_dim : int
+        Width of the model (size of each token’s embedding vector).
+    num_heads : int
+        Number of parallel attention heads. ``embedding_dim`` must be divisible by
+        this value.
+
+    Notes
+    -----
+    *   Decoder blocks mask future positions inside the `MultiHeadAttention`
+        module, ensuring auto-regressive (left-to-right) generation.
+    *   Encoder blocks are identical except the attention sub-layer is
+        *un-masked*.
+    """
+
+    def __init__(self, embedding_dim: int, num_heads: int) -> None:
+        super().__init__()
+
+        # attention layer is going to allow the model to have an understanding of tokens based on its surrounding context.
+        # for example a human might not know the definition of 'mole' since it could be the animal mole, chemistry measurement unit mole, or mole in the medical sense
+        # but if we see the word in a sentence like "The doctor examined my mole." We know defition of mole is being used. 
+        # The attention mechanism gives the model the ability to understand language like that too. 
+        self.self_attention = MultiHeadAttention(num_heads, embedding_dim)
+
+        # the MLP portion is added to the architecture so the model can memorize facts about the text
+        # thing like Lebron James is a basketball player...
+        self.feed_forward  = FeedForward(embedding_dim)
+
+        # “Pre-Norm” formulation this is a deviation from the original 'Attention Is All You Need Paper'
+        self.norm_attn = nn.LayerNorm(embedding_dim)
+        self.norm_ffn  = nn.LayerNorm(embedding_dim)
+
+    def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
+        """
+        Apply the Transformer block.
+
+        Parameters
+        ----------
+        input_ids : torch.Tensor
+            Input of shape *(batch_size, seq_len, embed_dim)*.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor of the same shape as ``x`` after attention and
+            feed-forward transformations.
+        """
+        # 1) Communication — tokens exchange information
+        input_ids = input_ids + self.self_attention(self.norm_attn(input_ids))
+        # 2) Computation — per-token non-linear processing
+        input_ids = input_ids + self.feed_forward(self.norm_ffn(input_ids))
+        return input_ids
+
+class GPT(nn.Module):
     """
     A simple neural language model that learns to predict the next token based solely 
     on the current token. It uses an embedding lookup table where each input token 
@@ -22,13 +93,13 @@ class BigramLanguageModel(nn.Module):
     without using attention or larger context.
     """
 
-    def __init__(self, tokenizer: dict[str, list[str]], context_size: int = 1024):
+    def __init__(self, tokenizer: dict[str, list[str]], context_size: int = 128, n_layer: int = 4, num_heads: int = 4):
         super().__init__() # calls constructor of parent (nn.Module) else you get an error, enables the pytorch stuff we need ( .parameters(), .cuda(), .train(), .eval()) and so on
         # A simple lookup table based on the vocab size x embedding dimension (you can choose this dimension)
         # for each encoding you now have a vector (randomly initalized) that will be improve each iteration of the model
         # the goal is to get the vector represensatations of the tokens (dense vectors) to be close together in the vector space
         # if they are related.
-        embedding_dim = 64
+        embedding_dim = 328
         token_dict_dim = len(tokenizer['encoder'])
         # TODO: currently not actually using gpu
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -42,16 +113,9 @@ class BigramLanguageModel(nn.Module):
         # embdding adds dimensionality to the data
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
         
-        # attention layer is going to allow the model to have an understanding of tokens based on its surrounding context.
-        # for example a human might not know the definition of 'mole' since it could be the animal mole, chemistry measurement unit mole, or mole in the medical sense
-        # but if we see the word in a sentence like "The doctor examined my mole." We know defition of mole is being used. 
-        # The attention mechanism gives the model the ability to understand language like that too. 
-        self.attention_head = MultiHeadAttention(embedding_dim=embedding_dim, num_heads=4)
-
-        # the MLP portion is added to the architecture so the model can memorize facts about the text
-        # thing like Lebron James is a basketball player...
-        self.mlp = FeedForward(embedding_dim)
-
+        # this function just makes it easier to add TransformerBlock layers for scaling
+        self.blocks = nn.Sequential(*[TransformerBlock(embedding_dim, num_heads=num_heads) for _ in range(n_layer)])
+        self.layer_norm = nn.LayerNorm(embedding_dim)
 
     def _reshape_tensors(logits, targets):
         """
@@ -101,10 +165,7 @@ class BigramLanguageModel(nn.Module):
         positions = torch.arange(input_length)
         position_embeddings = self.position_embedding_table(positions)
         processed_embeddings = embeddings + position_embeddings 
-        # we want to pass the embeddings through the self attention layer, so the model can learn 
-        # based on context
-        processed_embeddings = self.attention_head(processed_embeddings)
-        processed_embeddings = self.mlp(processed_embeddings)
+        processed_embeddings = self.blocks(processed_embeddings)
         # linear layer turns a contextual vector into a token probability distribution since the position
         logits = self.lm_head(processed_embeddings)
 
@@ -113,7 +174,7 @@ class BigramLanguageModel(nn.Module):
             loss = None
             return logits
         else:
-            logits, targets = BigramLanguageModel._reshape_tensors(logits, targets)
+            logits, targets = GPT._reshape_tensors(logits, targets)
             loss = functional.cross_entropy(logits, targets)
             return logits, loss
 

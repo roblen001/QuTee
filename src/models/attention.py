@@ -24,11 +24,11 @@ class MultiHeadAttention(nn.Module):
                              Should be equal to num_heads * head_dim.
         dropout_prob (float): Dropout probability applied after the final projection layer.
     """
-    def __init__(self, num_heads: int, embedding_dim: int, dropout_prob: float = 0.1):
+    def __init__(self, num_heads: int, embedding_dim: int, dropout_prob: float = 0.2):
         super().__init__() 
         # Dimensionality of each attention head (i.e., the size of each Q/K/V vector).
         head_size = embedding_dim // num_heads
-        self.attention_heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.attention_heads = nn.ModuleList([Head(head_size, embedding_dim=embedding_dim) for _ in range(num_heads)])
         self.output_projection = nn.Linear(num_heads * head_size, embedding_dim)
         self.dropout = nn.Dropout(dropout_prob)
 
@@ -52,7 +52,7 @@ class MultiHeadAttention(nn.Module):
 class Head(nn.Module):
     """ one head of self-attention """
 
-    def __init__(self, head_size, context_size: int = 1024, dropout: float = 0.3):
+    def __init__(self, head_size, context_size: int = 1024, dropout: float = 0.2, embedding_dim : int = 64):
         super().__init__()
         """
         Initializes a single attention head used in a multi-head self-attention mechanism.
@@ -71,16 +71,16 @@ class Head(nn.Module):
 
         # query token asks 'here's what I am looking for'
         # this might be a noun looking for how words might effect it
-        self.query = nn.Linear(64, head_size, bias=False)
+        self.query = nn.Linear(embedding_dim, head_size, bias=False)
 
         # key token responds 'here's what I offer' 
         # this could be adjectives which would have a large impact on a noun
         # thus would attend to the noun
-        self.key = nn.Linear(64, head_size, bias=False)
+        self.key = nn.Linear(embedding_dim, head_size, bias=False)
 
         # here's what I comminucate' 
         # this is finds out how the adjective impacts the nouns embedding (how it will move it in the embedding vector space)
-        self.value = nn.Linear(64, head_size, bias=False)
+        self.value = nn.Linear(embedding_dim, head_size, bias=False)
         
         # since we are dealing with a model whose job is to generate
         # we are dealing with decoder moodel this means we cannot have future tokens 
