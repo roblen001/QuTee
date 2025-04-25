@@ -89,7 +89,7 @@ model = GPT(
 - [x] Implement baseline GPT model (classical Transformer)
 - [x] Basic training loop & inference routines
 - [x] Modularize Feedforward portion
-- [ ] Simple performance benchmarks module (loss, perplexity, runtime)
+- [x] Simple performance benchmarks module (loss, perplexity, runtime)
 
 ✅ **Phase 2: Quantum Integrations (Simulation)**
 
