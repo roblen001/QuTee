@@ -1,4 +1,5 @@
-"""Contains the main model architecture
+"""
+Contains the main model architecture
 """
 
 import torch
@@ -257,7 +258,6 @@ class GPT(nn.Module):
         self.eval() # stopping training behaviour like dropout, ...
         average_losses = {}
 
-
         for split in ['train', 'test']:
             losses = torch.zeros(eval_iters)
             for i in range(eval_iters):
@@ -275,12 +275,6 @@ class GPT(nn.Module):
         """
         Executes the training loop, periodically evaluating, printing, and logging losses,
         while recording metrics using TrainingMonitor.
-
-        Args:
-            data (dict): Dictionary containing training data streams.
-            optimizer: Optimizer used for training.
-            epochs (int): Number of training epochs.
-            batch_size (int): Size of each training batch.
         """
         train_dataset = {'train': data['train']['stream']}
         monitor = TrainingMonitor()
@@ -309,6 +303,17 @@ class GPT(nn.Module):
                     log_file.write(log_message)
                     log_file.flush()
 
+                    # Save checkpoint after every 500 steps
+                    checkpoint_path = os.path.join(results_dir, f"checkpoint_step_{step}.pt")
+                    torch.save({
+                        'step': step,
+                        'model_state_dict': self.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'train_loss': losses['train'],
+                        'val_loss': losses['test']
+                    }, checkpoint_path)
+                    print(f"Saved checkpoint to {checkpoint_path}")
+
                 batch = get_batch(train_dataset, batch_size, self.context_size)
                 x = batch['train']['x'].to(self.device)
                 y = batch['train']['y'].to(self.device)
@@ -329,8 +334,17 @@ class GPT(nn.Module):
             log_file.write(final_loss_message)
             log_file.flush()
 
+            # Save final model checkpoint
+            final_model_path = os.path.join(results_dir, "model_final.pt")
+            torch.save({
+                'model_state_dict': self.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'final_loss': loss.item()
+            }, final_model_path)
+            print(f"Saved final model to {final_model_path}")
+
         # Save plots after training
         monitor.plot_losses()
         monitor.plot_epoch_times()
 
-        print(f"\nTraining log and plots saved to {results_dir}")
+        print(f"\nTraining log, checkpoints, and plots saved to {results_dir}")
