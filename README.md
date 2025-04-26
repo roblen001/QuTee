@@ -81,6 +81,27 @@ model = GPT(
 
 ---
 
+## 🧪 Synthetic Data Generation for Fine-tuning
+You will probably need to run the script for multiple days to fill the final prompt answer file if it's not filled when you try running it.
+
+1. **Set your API key** in `.env`:  
+   ```bash
+   OPENAI_API_KEY=your_api_token_here
+   ```
+
+2. **Install dependencies**:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the batch script:**:  
+   ```bash
+   python -m src.scripts.run_batch_job.py
+   ```
+Once the CSV is fully populated, you’ll have the high-quality synthetic dataset you need to fine-tune your small Shakespeare GPT model. 
+
+---
+
 ## 🛠 Roadmap & Checklist
 
 ✅ **Phase 1: Classical Foundations**
@@ -95,7 +116,7 @@ model = GPT(
 
 At this stage we have a model that takes shakesperean text
 and outputs cohesive words and sentences but it does not have any context to it. We want to fine tune the model so that when I ask it to write a story about a knight or something it will be able to spit out a cohesive story.
-- [] Add ability to save and load model checkpoints
+- [x] Add ability to save and load model checkpoints
 - [] Generate synthetic data for fine tuning using larger model
 - [] Finetune the small shakespear model
 - [] Implement method of data collection for comparison with quantum methods
