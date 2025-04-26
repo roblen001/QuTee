@@ -6,6 +6,8 @@ import torch.nn as nn
 from torch.nn import functional
 from torch import Tensor
 import time
+import os
+import datetime
 
 from src.utils.data_processing_tools import get_batch 
 from src.model_components.attention import MultiHeadAttention
@@ -269,10 +271,10 @@ class GPT(nn.Module):
         self.train() # reactivate the training behaviour
         return average_losses
 
-
-    def training_loop(self, data: dict, optimizer, epochs: int = 10000, batch_size: int = 32) -> None:
+    def training_loop(self, data: dict, optimizer, results_dir: str, epochs: int = 10000, batch_size: int = 32,) -> None:
         """
-        Executes the training loop, periodically evaluating and printing losses, and recording them using TrainingMonitor.
+        Executes the training loop, periodically evaluating, printing, and logging losses,
+        while recording metrics using TrainingMonitor.
 
         Args:
             data (dict): Dictionary containing training data streams.
@@ -283,33 +285,52 @@ class GPT(nn.Module):
         train_dataset = {'train': data['train']['stream']}
         monitor = TrainingMonitor()
 
-        for step in range(epochs):
-            epoch_start_time = time.time()
+        # Update monitor to save plots to the correct subfolder
+        monitor.results_dir = results_dir
 
-            if step % 500 == 0:
-                losses = self.pooled_loss(data, 500, batch_size, self.context_size)
-                epoch_time = time.time() - epoch_start_time
-                monitor.record(train_loss=losses['train'], val_loss=losses['test'], epoch_time=epoch_time)
+        # Set up training log
+        log_file_path = os.path.join(results_dir, "training_log.txt")
+        with open(log_file_path, "w", encoding="utf-8") as log_file:
+            for step in range(epochs):
+                epoch_start_time = time.time()
 
-                print(f"=========TRAINING LOSS AT STEP {step}===================")
-                print(f"Validation: {losses['test']}")
-                print(f"Training: {losses['train']}")
-                print(f"Epoch time: {epoch_time:.2f} seconds")
+                if step % 500 == 0:
+                    losses = self.pooled_loss(data, 500, batch_size, self.context_size)
+                    epoch_time = time.time() - epoch_start_time
+                    monitor.record(train_loss=losses['train'], val_loss=losses['test'], epoch_time=epoch_time)
 
-            batch = get_batch(train_dataset, batch_size, self.context_size)
-            x = batch['train']['x'].to(self.device)
-            y = batch['train']['y'].to(self.device)
+                    log_message = (
+                        f"\n========= TRAINING LOSS AT STEP {step} =========\n"
+                        f"Validation Loss: {losses['test']:.6f}\n"
+                        f"Training Loss: {losses['train']:.6f}\n"
+                        f"Epoch Time: {epoch_time:.2f} seconds\n"
+                    )
+                    print(log_message.strip())
+                    log_file.write(log_message)
+                    log_file.flush()
 
-            logits, loss = self(x, y)
+                batch = get_batch(train_dataset, batch_size, self.context_size)
+                x = batch['train']['x'].to(self.device)
+                y = batch['train']['y'].to(self.device)
 
-            # resets gradient of all model before backward pass or else you will have
-            # accumulated gradients across batches
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            optimizer.step()
+                logits, loss = self(x, y)
 
-        print("=========FINAL TRAINING LOSS=============")
-        print(loss.item())
+                # resets gradient of all model before backward pass or else you will have
+                # accumulated gradients across batches
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                optimizer.step()
 
+            final_loss_message = (
+                "\n========= FINAL TRAINING LOSS =========\n"
+                f"Final Training Loss: {loss.item():.6f}\n"
+            )
+            print(final_loss_message.strip())
+            log_file.write(final_loss_message)
+            log_file.flush()
+
+        # Save plots after training
         monitor.plot_losses()
         monitor.plot_epoch_times()
+
+        print(f"\nTraining log and plots saved to {results_dir}")

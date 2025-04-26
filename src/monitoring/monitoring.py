@@ -1,4 +1,5 @@
-"""Handles main class for training monitoring"""
+"""Handles main class for training monitoring and saves plots to experimental_results."""
+import os
 import matplotlib.pyplot as plt
 
 class TrainingMonitor:
@@ -10,6 +11,9 @@ class TrainingMonitor:
         self.train_losses: list[float] = []
         self.val_losses: list[float] = []
         self.epoch_times: list[float] = []
+
+        self.results_dir = "experimental_results"
+        os.makedirs(self.results_dir, exist_ok=True)
 
     def record(self, train_loss: float, val_loss: float, epoch_time: float) -> None:
         """
@@ -26,7 +30,7 @@ class TrainingMonitor:
 
     def plot_losses(self) -> None:
         """
-        Plots the training and validation losses over epochs.
+        Plots the training and validation losses over epochs and saves the plot.
         """
         plt.figure(figsize=(10, 5))
         plt.plot(self.train_losses, label='Training Loss')
@@ -36,11 +40,14 @@ class TrainingMonitor:
         plt.title('Training and Validation Loss Over Time')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        save_path = os.path.join(self.results_dir, "training_validation_loss.png")
+        plt.savefig(save_path)
+        plt.close()
+        print(f"Saved training/validation loss plot to {save_path}")
 
     def plot_epoch_times(self) -> None:
         """
-        Plots the epoch durations over epochs.
+        Plots the epoch durations over epochs and saves the plot.
         """
         plt.figure(figsize=(10, 5))
         plt.plot(self.epoch_times, label='Epoch Time (seconds)', color='purple')
@@ -49,4 +56,7 @@ class TrainingMonitor:
         plt.title('Epoch Times Over Training')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        save_path = os.path.join(self.results_dir, "epoch_times.png")
+        plt.savefig(save_path)
+        plt.close()
+        print(f"Saved epoch times plot to {save_path}")
