@@ -14,6 +14,7 @@ from src.utils.data_processing_tools import get_batch
 from src.model_components.attention import MultiHeadAttention
 from src.model_components.feedforward import BaseFeedForward, ClassicalFeedForward, QuantumFeedForward
 from src.monitoring.monitoring import TrainingMonitor
+from src.utils.data_processing_tools import decode
 
 import torch
 import torch.nn as nn
@@ -127,7 +128,7 @@ class GPT(nn.Module):
         # without position embedding table the model has no way of knowing which token came first
         # this knowledge will help it make better predictions
         self.position_embedding_table = nn.Embedding(context_size, embedding_dim)
-
+        self.tokenizer = tokenizer
         # linear layer turns a contextual vector into a token probability distribution since the position
         # embdding adds dimensionality to the data
         self.lm_head = nn.Linear(embedding_dim, token_dict_dim)
@@ -314,6 +315,18 @@ class GPT(nn.Module):
                     }, checkpoint_path)
                     print(f"Saved checkpoint to {checkpoint_path}")
 
+                    # Save text generation sample after every 500 steps
+                    sample_output = self.generate(
+                        torch.zeros((1, 1), dtype=torch.int64).to(self.device),
+                        max_new_tokens=200
+                    )
+                    sample_text = decode(sample_output[0].tolist(), self.tokenizer)
+                    sample_path = os.path.join(results_dir, f"sample_step_{step}.txt")
+                    with open(sample_path, "w", encoding="utf-8") as sample_file:
+                        sample_file.write(f"=== Generated text at step {step} ===\n\n")
+                        sample_file.write(sample_text)
+                    print(f"Saved sample text to {sample_path}")
+
                 batch = get_batch(train_dataset, batch_size, self.context_size)
                 x = batch['train']['x'].to(self.device)
                 y = batch['train']['y'].to(self.device)
@@ -347,4 +360,4 @@ class GPT(nn.Module):
         monitor.plot_losses()
         monitor.plot_epoch_times()
 
-        print(f"\nTraining log, checkpoints, and plots saved to {results_dir}")
+        print(f"\nTraining log, checkpoints, text samples, and plots saved to {results_dir}")

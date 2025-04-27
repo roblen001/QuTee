@@ -58,7 +58,7 @@ def decode(tokens: List[int], tokenizer: Dict[str, Dict]) -> str:
     Converts a list of integer token IDs back into a string.
 
     Args:
-        tokens: List of integer IDs.
+        tokens: List of integer IDs or a torch.Tensor.
         tokenizer: The output of create_tokenizer().
 
     Returns:
@@ -66,9 +66,11 @@ def decode(tokens: List[int], tokenizer: Dict[str, Dict]) -> str:
     """
     if isinstance(tokens, torch.Tensor):
         flat_list = tokens.view(-1).tolist()
+    else:
+        flat_list = tokens  # <--- Fix here: if already a list, use it directly
+
     dec = tokenizer['decoder']
     return ''.join(dec[t] for t in flat_list)
-
 
 def train_test_split(
     data: torch.Tensor,
