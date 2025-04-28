@@ -289,8 +289,8 @@ class GPT(nn.Module):
             for step in range(epochs):
                 epoch_start_time = time.time()
 
-                if step % 500 == 0:
-                    losses = self.pooled_loss(data, 500, batch_size, self.context_size)
+                if step % 100 == 0:
+                    losses = self.pooled_loss(data, 100, batch_size, self.context_size)
                     epoch_time = time.time() - epoch_start_time
                     monitor.record(train_loss=losses['train'], val_loss=losses['test'], epoch_time=epoch_time)
 
@@ -315,7 +315,7 @@ class GPT(nn.Module):
                     }, checkpoint_path)
                     print(f"Saved checkpoint to {checkpoint_path}")
 
-                    # Save text generation sample after every 500 steps
+                    # Save text generation sample after every 200 steps
                     sample_output = self.generate(
                         torch.zeros((1, 1), dtype=torch.int64).to(self.device),
                         max_new_tokens=200
@@ -356,8 +356,16 @@ class GPT(nn.Module):
             }, final_model_path)
             print(f"Saved final model to {final_model_path}")
 
+            # Export full model + tokenizer so you can load & generate without rebuilding
+            export_path = os.path.join(results_dir, "model_full.pt")
+            # attach tokenizer into the model object
+            self.tokenizer = self.tokenizer
+            torch.save(self, export_path)
+            print(f"Exported full model to {export_path}")
+
         # Save plots after training
         monitor.plot_losses()
         monitor.plot_epoch_times()
 
         print(f"\nTraining log, checkpoints, text samples, and plots saved to {results_dir}")
+

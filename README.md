@@ -96,7 +96,7 @@ You will probably need to run the script for multiple days to fill the final pro
 
 3. **Run the batch script:**:  
    ```bash
-   python -m src.scripts.run_batch_job.py
+   python -m src.scripts.generate_data_for_finetuning
    ```
 Once the CSV is fully populated, you’ll have the high-quality synthetic dataset you need to fine-tune your small Shakespeare GPT model. 
 

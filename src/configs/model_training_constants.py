@@ -1,0 +1,10 @@
+"""Set the parameters for the model
+"""
+CONTEXT_SIZE = 256 
+BATCH_SIZE = 8
+LEARNING_RATE = 1e-4
+EPOCHS = 3000
+MAX_NEW_TOKENS = 500
+NUM_OF_BLOCKS = 4
+NUM_HEADS = 4
+EMBEDDING_DIM = 128 

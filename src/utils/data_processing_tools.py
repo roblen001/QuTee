@@ -32,7 +32,10 @@ def create_tokenizer(text: str) -> Dict[str, Dict]:
         A dict with keys 'encoder' and 'decoder', each mapping characters
         to IDs and back again.
     """
-    chars = sorted(set(text))
+    # tokenizers use tags for finetuning so we need to add the tokens that 
+    # are going to be used in thet tags to the tokenizer even if they
+    # are not in the data we are creating the tokenizer repository from
+    chars = sorted(set(text + "<||>"))
     encoder = {ch: i for i, ch in enumerate(chars)}
     decoder = {i: ch for i, ch in enumerate(chars)}
     return {'encoder': encoder, 'decoder': decoder}

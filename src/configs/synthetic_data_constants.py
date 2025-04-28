@@ -5,6 +5,6 @@ DELAY_BETWEEN_REQUESTS = 1.2
 INPUT_CSV = "data/finetuning/shakespeare_prompts.csv" # these just contains the prompts that the chagpt UI made for me 
 OUTPUT_CSV = "data/finetuning/shakespeare_prompts_with_stories.csv" # this combined the prompts with the answers
 BATCH_INPUT_FILE = "data/finetuning/shakespeare_batch_input.jsonl"
-DAILY_TOKEN_LIMIT=55101 # 90,000k each day...
+DAILY_TOKEN_LIMIT=90000 # 90,000k each day...
 PROMPT_OVERHEAD_TOKENS=50 # adds a buffer
 CHECK_INTERVAL=60 # seconds between batch status polls
