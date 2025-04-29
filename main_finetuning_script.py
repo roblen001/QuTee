@@ -43,7 +43,7 @@ from src.configs.finetuning_constants import (
 
 # Prefix for generation prompt to match fine-tuning style
 PREFIX = (
-    "You are William Shakespeare himself, crafting poetic and eloquent stories. "
+    "<|PROMPT|> You are William Shakespeare himself, crafting poetic and eloquent stories. "
     "Write a short story in Shakespearean English about "
 )
 
@@ -71,7 +71,7 @@ def finetune_model() -> None:
     os.makedirs(out_dir, exist_ok=True)
     monitor = TrainingMonitor()
     monitor.results_dir = out_dir
-    early_stopper = EarlyStopping(patience=3)
+    # early_stopper = EarlyStopping(patience=3)
 
     checkpoint_path = os.path.join(out_dir, 'ckpt_latest.pt')  # always overwrite latest checkpoint
 
@@ -88,7 +88,9 @@ def finetune_model() -> None:
             scheduler.step()
 
             step += 1
-            if step % EVAL_EVERY == 0:
+            if step % EVAL_EVERY == 0 or step == total_steps:
+                percent_complete = (step / total_steps) * 100
+
                 stats = model.pooled_loss(
                     {'train': {'stream': train_stream}, 'test': {'stream': val_stream}},
                     eval_iters=50,
@@ -98,21 +100,23 @@ def finetune_model() -> None:
                 monitor.record(train_loss=stats['train'], val_loss=stats['test'], epoch_time=0)
                 reduce_lr_on_plateau.step(stats['test'])
 
-                # early stopping check
-                early_stopper.step(stats['test'], model)
-                if early_stopper.should_stop:
-                    print(f"⛔ Early stopping triggered at step {step} (no improvement after {early_stopper.patience} evaluations).")
-                    model.load_state_dict(early_stopper.best_model_state)
-                    final = os.path.join(out_dir, 'model_full_finetuned.pt')
-                    torch.save(model, final)
-                    print(f"✅ Saved best model after early stopping to {final}")
-                    return
+                print(f"🔵 Fine-tuning progress: {percent_complete:.2f}% complete")
+
+                # # early stopping check
+                # early_stopper.step(stats['test'], model)
+                # if early_stopper.should_stop:
+                #     print(f"⛔ Early stopping triggered at step {step} (no improvement after {early_stopper.patience} evaluations).")
+                #     model.load_state_dict(early_stopper.best_model_state)
+                #     final = os.path.join(out_dir, 'model_full_finetuned.pt')
+                #     torch.save(model, final)
+                #     print(f"✅ Saved best model after early stopping to {final}")
+                #     return
 
                 # checkpoint save (always overwrite)
                 torch.save(model.state_dict(), checkpoint_path)
 
                 # generate from styled prompt
-                subject = 'an old man.'
+                subject = 'an old man.<|STORY|>'
                 prompt = PREFIX + subject
                 input_ids = encode_prompt(prompt, model.tokenizer, model.context_size).to(device)
                 sample_ids = model.generate(input_ids, max_new_tokens=MAX_NEW_TOKENS)
