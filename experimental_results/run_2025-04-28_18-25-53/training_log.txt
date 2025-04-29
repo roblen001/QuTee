@@ -1,0 +1,153 @@
+
+========= TRAINING LOSS AT STEP 0 =========
+Validation Loss: 4.588070
+Training Loss: 4.597317
+Epoch Time: 82.41 seconds
+
+========= TRAINING LOSS AT STEP 100 =========
+Validation Loss: 2.942393
+Training Loss: 2.917403
+Epoch Time: 85.93 seconds
+
+========= TRAINING LOSS AT STEP 200 =========
+Validation Loss: 2.723114
+Training Loss: 2.700246
+Epoch Time: 90.99 seconds
+
+========= TRAINING LOSS AT STEP 300 =========
+Validation Loss: 2.623800
+Training Loss: 2.607559
+Epoch Time: 88.18 seconds
+
+========= TRAINING LOSS AT STEP 400 =========
+Validation Loss: 2.578900
+Training Loss: 2.566300
+Epoch Time: 89.48 seconds
+
+========= TRAINING LOSS AT STEP 500 =========
+Validation Loss: 2.548445
+Training Loss: 2.537364
+Epoch Time: 90.85 seconds
+
+========= TRAINING LOSS AT STEP 600 =========
+Validation Loss: 2.530064
+Training Loss: 2.521036
+Epoch Time: 102.14 seconds
+
+========= TRAINING LOSS AT STEP 700 =========
+Validation Loss: 2.519113
+Training Loss: 2.504437
+Epoch Time: 81.97 seconds
+
+========= TRAINING LOSS AT STEP 800 =========
+Validation Loss: 2.507349
+Training Loss: 2.491970
+Epoch Time: 94.59 seconds
+
+========= TRAINING LOSS AT STEP 900 =========
+Validation Loss: 2.497923
+Training Loss: 2.480552
+Epoch Time: 93.83 seconds
+
+========= TRAINING LOSS AT STEP 1000 =========
+Validation Loss: 2.493913
+Training Loss: 2.475793
+Epoch Time: 119.53 seconds
+
+========= TRAINING LOSS AT STEP 1100 =========
+Validation Loss: 2.489021
+Training Loss: 2.466597
+Epoch Time: 115.08 seconds
+
+========= TRAINING LOSS AT STEP 1200 =========
+Validation Loss: 2.479920
+Training Loss: 2.460638
+Epoch Time: 114.89 seconds
+
+========= TRAINING LOSS AT STEP 1300 =========
+Validation Loss: 2.478788
+Training Loss: 2.460038
+Epoch Time: 95.28 seconds
+
+========= TRAINING LOSS AT STEP 1400 =========
+Validation Loss: 2.465158
+Training Loss: 2.443531
+Epoch Time: 95.68 seconds
+
+========= TRAINING LOSS AT STEP 1500 =========
+Validation Loss: 2.460720
+Training Loss: 2.440839
+Epoch Time: 94.19 seconds
+
+========= TRAINING LOSS AT STEP 1600 =========
+Validation Loss: 2.454431
+Training Loss: 2.430954
+Epoch Time: 94.60 seconds
+
+========= TRAINING LOSS AT STEP 1700 =========
+Validation Loss: 2.450184
+Training Loss: 2.426155
+Epoch Time: 77.59 seconds
+
+========= TRAINING LOSS AT STEP 1800 =========
+Validation Loss: 2.442662
+Training Loss: 2.419749
+Epoch Time: 77.32 seconds
+
+========= TRAINING LOSS AT STEP 1900 =========
+Validation Loss: 2.436664
+Training Loss: 2.412745
+Epoch Time: 77.80 seconds
+
+========= TRAINING LOSS AT STEP 2000 =========
+Validation Loss: 2.425184
+Training Loss: 2.404813
+Epoch Time: 77.50 seconds
+
+========= TRAINING LOSS AT STEP 2100 =========
+Validation Loss: 2.423610
+Training Loss: 2.392377
+Epoch Time: 77.14 seconds
+
+========= TRAINING LOSS AT STEP 2200 =========
+Validation Loss: 2.411609
+Training Loss: 2.383691
+Epoch Time: 77.03 seconds
+
+========= TRAINING LOSS AT STEP 2300 =========
+Validation Loss: 2.391865
+Training Loss: 2.369619
+Epoch Time: 76.58 seconds
+
+========= TRAINING LOSS AT STEP 2400 =========
+Validation Loss: 2.378844
+Training Loss: 2.356592
+Epoch Time: 77.23 seconds
+
+========= TRAINING LOSS AT STEP 2500 =========
+Validation Loss: 2.364961
+Training Loss: 2.338460
+Epoch Time: 76.54 seconds
+
+========= TRAINING LOSS AT STEP 2600 =========
+Validation Loss: 2.348291
+Training Loss: 2.321350
+Epoch Time: 76.73 seconds
+
+========= TRAINING LOSS AT STEP 2700 =========
+Validation Loss: 2.340374
+Training Loss: 2.310826
+Epoch Time: 77.49 seconds
+
+========= TRAINING LOSS AT STEP 2800 =========
+Validation Loss: 2.322867
+Training Loss: 2.292167
+Epoch Time: 78.31 seconds
+
+========= TRAINING LOSS AT STEP 2900 =========
+Validation Loss: 2.305176
+Training Loss: 2.278074
+Epoch Time: 77.65 seconds
+
+========= FINAL TRAINING LOSS =========
+Final Training Loss: 2.296493
