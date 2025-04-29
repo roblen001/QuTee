@@ -117,9 +117,9 @@ Once the CSV is fully populated, you’ll have the high-quality synthetic datase
 At this stage we have a model that takes shakesperean text
 and outputs cohesive words and sentences but it does not have any context to it. We want to fine tune the model so that when I ask it to write a story about a knight or something it will be able to spit out a cohesive story.
 - [x] Add ability to save and load model checkpoints
-- [] Generate synthetic data for fine tuning using larger model
-- [] Finetune the small shakespear model
-- [] Implement method of data collection for comparison with quantum methods
+- [x] Generate synthetic data for fine tuning using larger model
+- [x] Finetune the small shakespear model
+- [x] Implement method of data collection for comparison with quantum methods
 
 ✅ **Phase 2: Quantum Integrations (Simulation)**
 

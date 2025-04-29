@@ -11,27 +11,6 @@ from torch.optim.lr_scheduler import LambdaLR
 
 from src.utils.data_processing_tools import read_textfile, train_test_split
 
-class EarlyStopping:
-    """
-    Early stopping utility to halt training when validation loss stops improving.
-    """
-    def __init__(self, patience: int = 3):
-        self.patience = patience
-        self.best_val_loss = float('inf')
-        self.counter = 0
-        self.should_stop = False
-        self.best_model_state = None
-
-    def step(self, val_loss: float, model: torch.nn.Module):
-        if val_loss < self.best_val_loss:
-            self.best_val_loss = val_loss
-            self.counter = 0
-            self.best_model_state = {k: v.cpu() for k, v in model.state_dict().items()}
-        else:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.should_stop = True
-
 def get_linear_schedule_with_warmup(
     optimizer: Optimizer,
     num_warmup_steps: int,
@@ -39,6 +18,10 @@ def get_linear_schedule_with_warmup(
 ) -> LambdaLR:
     """
     Build a linear warmup + decay learning rate scheduler.
+
+    The point of this is to adjust the learning rate so it increases
+    at the start for during the warm up phase but becomes smaller as the number of training steps 
+    progresses. Helps stabilize early learning and overshooting later on.
     """
     def lr_lambda(step: int) -> float:
         if step < num_warmup_steps:
@@ -89,6 +72,8 @@ def preprocess_data_for_finetuning(input_csv: str, output_txt: str) -> None:
     for idx, row in df.iterrows():
         prompt = str(row['prompt']).strip()
         story = str(row['story']).strip()
+        # It's important to add these tags so the model
+        # learns when it should be generating and not
         formatted = f"<|PROMPT|> {prompt} <|STORY|> {story} <|EOS|>"
         samples.append(formatted)
 
@@ -117,6 +102,7 @@ def encode_prompt(prompt: str, tokenizer: dict, context_size: int) -> torch.Tens
     """
     enc_map = tokenizer['encoder']
     prompt_norm = prompt.lower()
+    # if the tokenizer encounters unknown characters in the text it should replace them wit '<|UNK|>'
     token_ids = [enc_map.get(ch, enc_map.get('<|UNK|>', 0)) for ch in prompt_norm]
     if len(token_ids) > context_size:
         token_ids = token_ids[-context_size:]
