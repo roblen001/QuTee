@@ -121,6 +121,10 @@ and outputs cohesive words and sentences but it does not have any context to it.
 - [x] Finetune the small shakespear model
 - [x] Implement method of data collection for comparison with quantum methods
 
+Note the finetuning scripts all work but better hardware is needed (CPU is taking way too long to train)
+
+Would ideally need to train a larger pretrained model too.
+
 ✅ **Phase 2: Quantum Integrations (Simulation)**
 
 - [ ] Integrate PennyLane & PyTorch
