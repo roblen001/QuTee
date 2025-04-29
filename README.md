@@ -4,6 +4,9 @@
 
 QuTee is a modular and extensible research framework designed to seamlessly integrate quantum components within classical Transformer architectures (GPT-style models). Its primary purpose is to explore whether quantum-enhanced modules—such as variational quantum circuits (VQCs) for feed-forward layers or quantum kernel-based attention mechanisms—can offer measurable improvements in generalization, efficiency, and representational power for natural language processing (NLP) tasks.
 
+
+I added fine-tuning functionality and included some raw Shakespearean text to enable end-to-end model training. While this is not the primary focus of the framework at the moment, it was added for completeness. I also developed scripts that perform data distillation by generating fine-tuning datasets using OpenAI’s model APIs. As a result, the framework now supports full end-to-end GPT-style model development (on a small scale) for experimental purposes.
+
 ---
 
 ## 📖 Quick Start
@@ -88,18 +91,50 @@ You will probably need to run the script for multiple days to fill the final pro
    ```bash
    OPENAI_API_KEY=your_api_token_here
    ```
-
 2. **Install dependencies**:  
+You can modify the parameters for the synthetic data generation in src/configs/synthetic_data_constants.py
+
+3. **Install dependencies**:  
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run the batch script:**:  
+4. **Run the batch script:**:  
    ```bash
    python -m src.scripts.generate_data_for_finetuning
    ```
 Once the CSV is fully populated, you’ll have the high-quality synthetic dataset you need to fine-tune your small Shakespeare GPT model. 
 
+---
+
+## 🧪 Run Fine-tuning
+This script takes a long time to run on your cpus depending on your settings.
+
+1. **Install dependencies**:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Update parameters**:
+   You can modify the parameters in /src/configs/finetuning_constants.py
+
+3. **Run the finetuning script**:  
+   ```bash
+   python -m src.scripts.generate_data_for_finetuning
+   ```
+---
+
+## 🧪 Run Inferencing
+
+1. **Install dependencies**:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the finetuning script**:  
+   ```bash
+   python -m src.scripts.main_inferencing_scipt
+   ```
 ---
 
 ## 🛠 Roadmap & Checklist
